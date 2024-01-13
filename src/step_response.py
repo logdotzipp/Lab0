@@ -17,17 +17,13 @@ int_queue = cqueue.IntQueue(QUEUE_SIZE)
 # Enable adc pin
 adc = pyb.ADC(pyb.Pin.board.PB0)
 
-# Initialize doFillQueue to prevent the queue from filling immediately
-doFillQueue = False
 
 def timer_int(tim_num):
   """!
   This timer interrupt runs every 10ms.
-  It only fills the queue with data when doFillQueue is set to true.
+  Fills queue with ADC value every pass through.
   """
-  #print("interrupting")
-  if doFillQueue == True:
-      int_queue.put(adc.read())
+  int_queue.put(adc.read())
 
 
 def step_response ():
@@ -36,11 +32,6 @@ def step_response ():
     It then pauses breifly before performing the step input and capturing data. Data capture is complete when the queue is full.
     """
     # Function code here
-      
-    # Setup Timer
-    timmy = pyb.Timer(1, freq = 100)
-    timmy.counter ()
-    timmy.callback(timer_int)
 
     # Setup output pin
     pinA5 = pyb.Pin(pyb.Pin.board.PC0, pyb.Pin.OUT_PP)
@@ -50,21 +41,19 @@ def step_response ():
     utime.sleep(3.0)
     pinA5.value(1)
     
-    
-    # Begin capturing data by enabling doFillQueue
+    # Begin capturing data by enabling interrupt and callbacks
+    timmy = pyb.Timer(1, freq = 100)
+    timmy.counter ()
+    timmy.callback(timer_int)
     print("Capturing...")
-    global doFillQueue
-    doFillQueue = True
     
     while int_queue.full() == False:
-        # do nothing and wait for queue to fill
+        # Do nothing and wait for queue to fill
         ham = 0
-        
     
+    # Once complete, halt callbacks so that the queue does not get overwritten
+    timmy.callback(None)
     print("Capture Complete")
-    # Prevent the queue from being overwritten
-    doFillQueue = False
-    
     
     # Loop over data collected in queue
     for i in range(QUEUE_SIZE):
