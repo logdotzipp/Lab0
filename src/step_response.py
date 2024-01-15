@@ -7,6 +7,8 @@ Data points from the recorded response are printed over serial.
 import cqueue
 import utime
 import micropython
+from machine import UART
+
 # Allocate memory to catch exceptions in interrupts
 micropython.alloc_emergency_exception_buf(100)
 
@@ -33,37 +35,62 @@ def step_response ():
     """
     # Function code here
 
-    # Setup output pin
+    # First TIme setup:
+    #Setup output pin
     pinA5 = pyb.Pin(pyb.Pin.board.PC0, pyb.Pin.OUT_PP)
+    #Setup serial communication
+    uart = UART(1, 9600)
+    uart.init(9600, bits=8, parity=None, stop=1)
+    
+    # Setup infinite loop, breaks on ctrl+c
+    while True:
+        try:
 
-    # Set output pin to 0, and allow all transient response to settle before performing the step input
-    pinA5.value(0)
-    utime.sleep(3.0)
-    pinA5.value(1)
+#             # Wait for start message from PC
+#             print("Waiting for start message...")
+#             while True:
+#                 try:
+#                     if(uart.any() != 0):
+#                         print(uart.readline())
+#                         
+# #                     if uart.readline() == 'Start':
+# #                         break
+# #                     else:
+# #                         continue
+#                 except:
+#                     print("Serial Read Error")
+
+            # Set output pin to 0, and allow all transient response to settle before performing the step input
+            pinA5.value(0)
+            utime.sleep(3.0)
+            pinA5.value(1)
+            
+            # Begin capturing data by enabling interrupt and callbacks
+            timmy = pyb.Timer(1, freq = 100)
+            timmy.counter ()
+            timmy.callback(timer_int)
+            print("Capturing...")
+            
+            while int_queue.full() == False:
+                # Do nothing and wait for queue to fill
+                continue
+            
+            # Once complete, halt callbacks so that the queue does not get overwritten
+            timmy.callback(None)
+            print("Capture Complete")
+            
+            # Loop over data collected in queue
+            for i in range(QUEUE_SIZE):
+                # Map adc values to voltage
+                voltageRead = int_queue.get()/4096 * 3.3
+                # Create the string to print using csv format
+                outString = str(i*10) + "," + str(voltageRead)
+                print(outString)
+                
+            print("End");
     
-    # Begin capturing data by enabling interrupt and callbacks
-    timmy = pyb.Timer(1, freq = 100)
-    timmy.counter ()
-    timmy.callback(timer_int)
-    print("Capturing...")
-    
-    while int_queue.full() == False:
-        # Do nothing and wait for queue to fill
-        continue
-    
-    # Once complete, halt callbacks so that the queue does not get overwritten
-    timmy.callback(None)
-    print("Capture Complete")
-    
-    # Loop over data collected in queue
-    for i in range(QUEUE_SIZE):
-        # Map adc values to voltage
-        voltageRead = int_queue.get()/4096 * 3.3
-        # Create the string to print using csv format
-        outString = str(i*10) + "," + str(voltageRead)
-        print(outString)
-        
-    print("End");
+        except KeyboardInterrupt:
+            print("PROGRAM INTERRUPTED")
 
 if __name__ == "__main__":
   step_response()
