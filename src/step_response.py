@@ -49,7 +49,7 @@ def step_response ():
     
     while int_queue.full() == False:
         # Do nothing and wait for queue to fill
-        ham = 0
+        continue
     
     # Once complete, halt callbacks so that the queue does not get overwritten
     timmy.callback(None)
