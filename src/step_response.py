@@ -46,19 +46,19 @@ def step_response ():
     while True:
         try:
 
-#             # Wait for start message from PC
-#             print("Waiting for start message...")
-#             while True:
-#                 try:
-#                     if(uart.any() != 0):
-#                         print(uart.readline())
-#                         
-# #                     if uart.readline() == 'Start':
-# #                         break
-# #                     else:
-# #                         continue
-#                 except:
-#                     print("Serial Read Error")
+            # Wait for start message from PC
+            print("Waiting for start message...")
+            while True:
+                try:
+                    if(uart.any() != 0):
+                        print(uart.readline())
+                        
+                        if uart.readline() == 'Start':
+                            break
+                        else:
+                            continue
+                except:
+                    print("Serial Read Error")
 
             # Set output pin to 0, and allow all transient response to settle before performing the step input
             pinA5.value(0)
@@ -85,6 +85,7 @@ def step_response ():
                 voltageRead = int_queue.get()/4096 * 3.3
                 # Create the string to print using csv format
                 outString = str(i*10) + "," + str(voltageRead)
+                print("Start Data Transfer")
                 print(outString)
                 
             print("End");
