@@ -35,7 +35,7 @@ def step_response ():
     """
     # Function code here
 
-    # First TIme setup:
+    # First Time setup:
     #Setup output pin
     pinA5 = pyb.Pin(pyb.Pin.board.PC0, pyb.Pin.OUT_PP)
     #Setup serial communication
@@ -47,18 +47,31 @@ def step_response ():
         try:
 
             # Wait for start message from PC
-            print("Waiting for start message...")
+#             print("Waiting for start message...")
+#             while True:
+#                 try:
+#                     if(uart.any() != 0):
+#                         print(uart.readline())
+#                         
+#                         if uart.readline() == 'Start':
+#                             break
+#                         else:
+#                             continue
+#                 except:
+#                     print("Serial Read Error")
+
+            # Temporary Pullup to start
+            
+            print("Waiting for button start...")
+            startAdc = pyb.ADC(pyb.Pin.board.PA0)
             while True:
-                try:
-                    if(uart.any() != 0):
-                        print(uart.readline())
-                        
-                        if uart.readline() == 'Start':
-                            break
-                        else:
-                            continue
-                except:
-                    print("Serial Read Error")
+                if startAdc.read() < 2000:
+                    # Start code
+                    print(startAdc.read())
+                    break
+                else:
+                    continue
+                
 
             # Set output pin to 0, and allow all transient response to settle before performing the step input
             pinA5.value(0)
@@ -78,14 +91,14 @@ def step_response ():
             # Once complete, halt callbacks so that the queue does not get overwritten
             timmy.callback(None)
             print("Capture Complete")
-            
+            print("Start Data Transfer")
+            print("Time [s], Voltage [V]")
             # Loop over data collected in queue
             for i in range(QUEUE_SIZE):
                 # Map adc values to voltage
                 voltageRead = int_queue.get()/4096 * 3.3
                 # Create the string to print using csv format
                 outString = str(i*10) + "," + str(voltageRead)
-                print("Start Data Transfer")
                 print(outString)
                 
             print("End");

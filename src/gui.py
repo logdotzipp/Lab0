@@ -6,36 +6,111 @@ from serial import Serial
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
+
+ser = Serial("COM3", 9600)
+
 def waitforstring():
     while True:
         if (ser.in_waiting != 0):
-            return ser.readline()
+            bstring = ser.readline()
+            bstring = bstring.strip()
+            return bstring.decode("utf-8")
             break
 
-def send_message():
-    ser = Serial("/dev/tty.usbmodem206B378239472", 9600)
+def send_message(axes,canvas):
     
-    ser.write("Start")
     
-    while True:
-         line = waitforstring()
-         print(line)
-#             # Split string so that it can be read
-#             
-#             # Check for second start block
-#             if (line == "Start Data Transfer"):
-#                 header = waitforstring()
-#                 
-#                 while True:
-#                     if (waitforstring() != "End"):
-#                         # Split and store values as plot points/labels
-#                     else:
-#                         break
-#             else:
-#                 print(line)
-#                 continue
+    try:
         
+        # Send start message to microcontroller here
+        #
+        #
+        #
+        
+        # Setup lists in which to store data points
+        xvals = []
+        yvals = []
+        
+        # Wait for data to be recieved from microcontroller
+        print("PC - Waiting for Data Transfer...")
+        while True:
+            
+            # Check for start message from microcontroller
+            line = waitforstring()
+            if (line == "Start Data Transfer"):
+                break
+            else:
+                print("Microcontroller - " + line)
+                continue
+               
+        # The first line should be the headers for plot axes
+        firstLine = waitforstring()
+        labels = firstLine.split(",")
+        print("PC - Captured Header Line")
+        
+        # Wait for remaining data points to appear
+        while True:
+            # Read current line
+            currentLine = waitforstring()
+            
+            # If the end block occurs, break
+            if (currentLine != "End"):
+                
+                
+                # Modify comma separated values to ensure uniformity
+                
+                # Strip any beginning/ending spaces
+                #moddedline = line.strip()
+                
+                # Replace all spaces with commas
+                moddedline = currentLine.replace(" ",",")
+            
+                # Split based on commas
+                strings = moddedline.split(",")
+                
+                
+                try:
+                    # Convert to floating point numbers
+                    xpt = float(strings[0])
+                    ypt = float(strings[1])
+                    
+                    # Store only the first two data points            
+                    xvals.append(xpt)
+                    yvals.append(ypt)
+                    
+                except:
+                    print("PC - Read Error on data: " + currentLine)
+                    continue
+            else:
+                print("PC - End Data Transfer")
+                break
+            
+            
+        # Data transfer complete
+        # Plot the data on the gui
+        plot_data(axes, canvas, xvals, yvals, labels)
+        
+        
+            
+    except KeyboardInterrupt:
+        print("Keyboard interrupt... Shutting Down")
+        ser.close()
+        print("Serial Closed")
+        
+    except Exception as e:
+        # general purpose error handling
+        print(e)
+        ser.close()
+        print("Serial Closed")
+        
+def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
     
+    print("PC - Plotting Data...")
+    plot_axes.plot(xvals, yvals)
+    plot_axes.set_xlabel(labels[0])
+    plot_axes.set_ylabel(labels[1])
+    plot_axes.grid(True)
+    plot_canvas.draw()
 
 def test(title):
     tk_root = tkinter.Tk()
@@ -52,7 +127,9 @@ def test(title):
     toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
     toolbar.update()
     
-    button_run = tkinter.Button(master=tk_root, text="Print Message", command=lambda: send_message())
+    button_run = tkinter.Button(master=tk_root, text="Print Message", command=lambda: send_message(axes, canvas))
+    
+    button_quit = tkinter.Button(master=tk_root, text="Quit", command=tk_root.destroy)
     
     canvas.get_tk_widget().grid(row=0, column=0, columnspan=3)
     toolbar.grid(row=1, column=0, columnspan=3)
