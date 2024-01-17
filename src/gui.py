@@ -1,4 +1,5 @@
 import tkinter
+import math
 from serial import Serial
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -27,8 +28,6 @@ def send_message(axes,canvas):
         # Setup lists in which to store data points
         xvals = []
         yvals = []
-    
-        
     
         # Wait for data to be recieved from microcontroller
         print("PC - Waiting for Data Transfer...")
@@ -103,11 +102,17 @@ def send_message(axes,canvas):
         print("Serial Closed")
         
 def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
-    
+    xth = []
+    yth = []
+    i = 0
+    for i in range(1990):
+        xth.append(i)
+        yth.append((3.3 * (1 - math.exp(-(i / 1000) / 0.33))))
+        
     plot_axes.clear()
     plot_canvas.draw()
     print("PC - Plotting Data...")
-    plot_axes.plot(xvals, yvals)
+    plot_axes.plot(xvals, yvals,'.' xth, yth)
     plot_axes.set_xlabel(labels[0])
     plot_axes.set_ylabel(labels[1])
     plot_axes.grid(True)
