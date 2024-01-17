@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
-ser = Serial("/dev/tty.usbmodem206B378239472", 9600)
+ser = Serial("/dev/tty.usbmodem206B378239472", 115200)
 
 def waitforstring():
     while True:
