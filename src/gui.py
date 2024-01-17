@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
-ser = Serial("COM3", 9600)
+ser = Serial("/dev/tty.usbmodem206B378239472", 9600)
 
 def waitforstring():
     while True:
@@ -18,8 +18,8 @@ def waitforstring():
             break
 
 def send_message(axes,canvas):
-    
-    
+
+
     try:
         
         # Send start message to microcontroller here
@@ -31,6 +31,8 @@ def send_message(axes,canvas):
         xvals = []
         yvals = []
         
+        
+    
         # Wait for data to be recieved from microcontroller
         print("PC - Waiting for Data Transfer...")
         while True:
@@ -105,6 +107,8 @@ def send_message(axes,canvas):
         
 def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
     
+    plot_axes.clear()
+    plot_canvas.draw()
     print("PC - Plotting Data...")
     plot_axes.plot(xvals, yvals)
     plot_axes.set_xlabel(labels[0])
@@ -122,18 +126,20 @@ def test(title):
     canvas = FigureCanvasTkAgg(fig, master=tk_root)
     toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
     toolbar.update()
-    canvas = FigureCanvasTkAgg(fig, master=tk_root)
+    
     
     toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
     toolbar.update()
     
-    button_run = tkinter.Button(master=tk_root, text="Print Message", command=lambda: send_message(axes, canvas))
-    
+    button_run = tkinter.Button(master=tk_root, text="Run", command=lambda: send_message(axes, canvas))
+    button_clear = tkinter.Button(master=tk_root,text="Clear",command=lambda: axes.clear() or canvas.draw())
     button_quit = tkinter.Button(master=tk_root, text="Quit", command=tk_root.destroy)
     
     canvas.get_tk_widget().grid(row=0, column=0, columnspan=3)
     toolbar.grid(row=1, column=0, columnspan=3)
     button_run.grid(row=2, column=0)
+    button_quit.grid(row=2, column=2)
+    button_clear.grid(row=2, column=1)
     
     tkinter.mainloop()
     
