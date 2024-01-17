@@ -1,7 +1,4 @@
-import math
-import time
 import tkinter
-from random import random
 from serial import Serial
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -30,7 +27,7 @@ def send_message(axes,canvas):
         # Setup lists in which to store data points
         xvals = []
         yvals = []
-        
+    
         
     
         # Wait for data to be recieved from microcontroller
