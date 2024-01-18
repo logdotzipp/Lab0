@@ -112,7 +112,7 @@ def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
     plot_axes.clear()
     plot_canvas.draw()
     print("PC - Plotting Data...")
-    plot_axes.plot(xvals, yvals,'.' xth, yth)
+    plot_axes.plot(xvals, yvals,'.', xth, yth)
     plot_axes.set_xlabel(labels[0])
     plot_axes.set_ylabel(labels[1])
     plot_axes.grid(True)
