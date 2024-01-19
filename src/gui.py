@@ -1,3 +1,8 @@
+"""! @file gui.py
+This program creates a use GUI that graphs a RC circuit
+response when step_response is called when the user
+selects "Run" and communicates with Microcontroller.
+"""
 import tkinter
 import math
 from serial import Serial
@@ -9,6 +14,11 @@ ser = Serial("COM3", 115200)
 
 # %%
 def waitforstring():
+    """!
+    Function checks if there is data waiting inside
+    the Serial port and if so, reads the data and
+    converts it to a string.
+    """
     while True:
         if (ser.in_waiting != 0):
             bstring = ser.readline()
@@ -18,7 +28,10 @@ def waitforstring():
 
 # %%
 def send_message(axes, canvas, tk_root):
-
+    """!
+    Function transfers data collected by step_response
+    when the function is called and plots data on the GUI.
+    """
 
     try:
         
@@ -27,7 +40,7 @@ def send_message(axes, canvas, tk_root):
         canvas.draw()
         
         
-        # Flush all the wiating data in the COM port
+        # Flush all the waiting data in the COM port
         ser.flushInput()
 
         # Write a Cntrl C and Cntrl D to restart the controller
@@ -111,6 +124,11 @@ def send_message(axes, canvas, tk_root):
         
 #%%        
 def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
+    """!
+    Function creates theoretical data points for RC circuit
+    and plots both the experimental and theoretical curves
+    on the same plots.
+    """
     
     # Create Theoretical Data Points
     xth = []
@@ -135,6 +153,10 @@ def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
 
 # %% 
 def quitprgm(tk_root):
+    """!
+    Function clears adn closes Serial port and closes
+    GUI window.
+    """
     
     # Flush Serial Port of data
     ser.flush()
@@ -148,6 +170,12 @@ def quitprgm(tk_root):
 
 # %%
 def test(title):
+    """!
+    Function creates GUI where the theoretical and experimental RC
+    circuit curves are displayed. It also creates three buttons
+    where users can "Run" step_response to create the RC curves,
+    "Clear" the plot or "Quit" the GUI program.
+    """
     
     try:
         tk_root = tkinter.Tk()
@@ -186,4 +214,4 @@ def test(title):
 
 # %%
 if __name__ == "__main__":
-    test(title = "test")
+    test(title = "RC Response")
