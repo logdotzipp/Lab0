@@ -5,8 +5,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
-ser = Serial("/dev/tty.usbmodem206B378239472", 115200)
+ser = Serial("COM3", 115200)
 
+# %%
 def waitforstring():
     while True:
         if (ser.in_waiting != 0):
@@ -15,15 +16,23 @@ def waitforstring():
             return bstring.decode("utf-8")
             break
 
-def send_message(axes,canvas):
+# %%
+def send_message(axes, canvas, tk_root):
 
 
     try:
         
-        # Send start message to microcontroller here
-        #
-        #
-        #
+        # Clear the current plot
+        axes.clear()
+        canvas.draw()
+        
+        
+        # Flush all the wiating data in the COM port
+        ser.flushInput()
+
+        # Write a Cntrl C and Cntrl D to restart the controller
+        ser.write(b'\x03')
+        ser.write(b'\x04')
         
         # Setup lists in which to store data points
         xvals = []
@@ -92,58 +101,89 @@ def send_message(axes,canvas):
             
     except KeyboardInterrupt:
         print("Keyboard interrupt... Shutting Down")
-        ser.close()
-        print("Serial Closed")
-        
+        quitprgm(tk_root)
+       
     except Exception as e:
         # general purpose error handling
         print(e)
-        ser.close()
-        print("Serial Closed")
+        quitprgm(tk_root)
         
+        
+#%%        
 def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
+    
+    # Create Theoretical Data Points
     xth = []
     yth = []
     i = 0
     for i in range(1990):
         xth.append(i)
         yth.append((3.3 * (1 - math.exp(-(i / 1000) / 0.33))))
-        
+    
+    # Plot the curves
     plot_axes.clear()
     plot_canvas.draw()
     print("PC - Plotting Data...")
-    plot_axes.plot(xvals, yvals,'.', xth, yth)
+    plot_axes.plot(xvals, yvals, '.')
+    plot_axes.plot(xth, yth)
+    plot_axes.legend(['Experimental Capture', 'Theoretical Response'])
     plot_axes.set_xlabel(labels[0])
     plot_axes.set_ylabel(labels[1])
     plot_axes.grid(True)
     plot_canvas.draw()
+    print("PC - Plotting Data Complete")
 
+# %% 
+def quitprgm(tk_root):
+    
+    # Flush Serial Port of data
+    ser.flush()
+    # Close the serial port
+    ser.close()
+    print("-------Serial Closed------")
+    # Close the window
+    tk_root.destroy()
+    
+    print("----Program Terminated----")
+
+# %%
 def test(title):
-    tk_root = tkinter.Tk()
-    tk_root.wm_title(title)
     
-    fig = Figure()
-    axes = fig.add_subplot()
-    # Create the drawing canvas and a handy plot navigation toolbar
-    canvas = FigureCanvasTkAgg(fig, master=tk_root)
-    toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
-    toolbar.update()
+    try:
+        tk_root = tkinter.Tk()
+        tk_root.wm_title(title)
+        
+        fig = Figure()
+        axes = fig.add_subplot()
+        # Create the drawing canvas and a handy plot navigation toolbar
+        canvas = FigureCanvasTkAgg(fig, master=tk_root)
+        toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
+        toolbar.update()
+        
+        
+        toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
+        toolbar.update()
+        
+        button_run = tkinter.Button(master=tk_root, text="Run", command=lambda: send_message(axes, canvas, tk_root))
+        button_clear = tkinter.Button(master=tk_root,text="Clear",command=lambda: axes.clear() or canvas.draw())
+        button_quit = tkinter.Button(master=tk_root, text="Quit", command=lambda: quitprgm(tk_root))
+        
+        canvas.get_tk_widget().grid(row=0, column=0, columnspan=3)
+        toolbar.grid(row=1, column=0, columnspan=3)
+        button_run.grid(row=2, column=0)
+        button_quit.grid(row=2, column=2)
+        button_clear.grid(row=2, column=1)
+        
+        tkinter.mainloop()
     
-    
-    toolbar = NavigationToolbar2Tk(canvas, tk_root, pack_toolbar=False)
-    toolbar.update()
-    
-    button_run = tkinter.Button(master=tk_root, text="Run", command=lambda: send_message(axes, canvas))
-    button_clear = tkinter.Button(master=tk_root,text="Clear",command=lambda: axes.clear() or canvas.draw())
-    button_quit = tkinter.Button(master=tk_root, text="Quit", command=tk_root.destroy)
-    
-    canvas.get_tk_widget().grid(row=0, column=0, columnspan=3)
-    toolbar.grid(row=1, column=0, columnspan=3)
-    button_run.grid(row=2, column=0)
-    button_quit.grid(row=2, column=2)
-    button_clear.grid(row=2, column=1)
-    
-    tkinter.mainloop()
-    
+    except KeyboardInterrupt:
+        
+        print("Keyboard Interrupt Injected")
+        quitprgm(tk_root)
+        
+            
+        
+
+# %%
 if __name__ == "__main__":
     test(title = "test")

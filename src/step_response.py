@@ -7,7 +7,7 @@ Data points from the recorded response are printed over serial.
 import cqueue
 import utime
 import micropython
-from machine import UART
+import pyb
 
 # Allocate memory to catch exceptions in interrupts
 micropython.alloc_emergency_exception_buf(100)
@@ -38,73 +38,60 @@ def step_response ():
     # First Time setup:
     #Setup output pin
     pinA5 = pyb.Pin(pyb.Pin.board.PC0, pyb.Pin.OUT_PP)
-    #Setup serial communication
-    uart = UART(1, 9600)
-    uart.init(9600, bits=8, parity=None, stop=1)
     
-    # Setup infinite loop, breaks on ctrl+c
-    while True:
-        try:
+    try:
 
-            # Wait for start message from PC
-#             print("Waiting for start message...")
+    
+        # Temporary Pullup to start
+        
+#             print("Waiting for button start...")
+#             startAdc = pyb.ADC(pyb.Pin.board.PA0)
 #             while True:
-#                 try:
-#                     if(uart.any() != 0):
-#                         print(uart.readline())
-#                         
-#                         if uart.readline() == 'Start':
-#                             break
-#                         else:
-#                             continue
-#                 except:
-#                     print("Serial Read Error")
+#                 if startAdc.read() < 2000:
+#                     # Start code
+#                     print(startAdc.read())
+#                     break
+#                 else:
+#                     continue
+#                 
 
-            # Temporary Pullup to start
+        # Set output pin to 0, and allow all transient response to settle before performing the step input
+        pinA5.value(0)
+        utime.sleep(3.0)
+        pinA5.value(1)
+        
+        # Begin capturing data by enabling interrupt and callbacks
+        timmy = pyb.Timer(1, freq = 100)
+        timmy.counter ()
+        timmy.callback(timer_int)
+        print("Capturing...")
+        
+        while int_queue.full() == False:
+            # Do nothing and wait for queue to fill
+            continue
+        
+        # Once complete, halt callbacks so that the queue does not get overwritten
+        timmy.callback(None)
+        # Turn off the trigger pin
+        pinA5.value(0)
+        
+        print("Capture Complete")
+        print("Start Data Transfer")
+        print("Time [s], Voltage [V]")
+        # Loop over data collected in queue
+        for i in range(QUEUE_SIZE):
+            # Map adc values to voltage
+            voltageRead = int_queue.get()/4096 * 3.3
+            # Create the string to print using csv format
+            outString = str(i*10) + "," + str(voltageRead)
+            print(outString)
             
-            print("Waiting for button start...")
-            startAdc = pyb.ADC(pyb.Pin.board.PA0)
-            while True:
-                if startAdc.read() < 2000:
-                    # Start code
-                    print(startAdc.read())
-                    break
-                else:
-                    continue
-                
-
-            # Set output pin to 0, and allow all transient response to settle before performing the step input
-            pinA5.value(0)
-            utime.sleep(3.0)
-            pinA5.value(1)
-            
-            # Begin capturing data by enabling interrupt and callbacks
-            timmy = pyb.Timer(1, freq = 100)
-            timmy.counter ()
-            timmy.callback(timer_int)
-            print("Capturing...")
-            
-            while int_queue.full() == False:
-                # Do nothing and wait for queue to fill
-                continue
-            
-            # Once complete, halt callbacks so that the queue does not get overwritten
-            timmy.callback(None)
-            print("Capture Complete")
-            print("Start Data Transfer")
-            print("Time [s], Voltage [V]")
-            # Loop over data collected in queue
-            for i in range(QUEUE_SIZE):
-                # Map adc values to voltage
-                voltageRead = int_queue.get()/4096 * 3.3
-                # Create the string to print using csv format
-                outString = str(i*10) + "," + str(voltageRead)
-                print(outString)
-                
-            print("End");
+        print("End");
     
-        except KeyboardInterrupt:
+    except KeyboardInterrupt:
             print("PROGRAM INTERRUPTED")
+            # Turn off trigger pin
+            pinA5.value(0)
 
 if __name__ == "__main__":
   step_response()
