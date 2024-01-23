@@ -1,3 +1,7 @@
+"""! @file square.py
+This program outputs a square wave with a period of 5 seconds
+to the microcontroller.
+"""
 import utime
 
 adc = pyb.ADC(pyb.Pin.board.PB0)

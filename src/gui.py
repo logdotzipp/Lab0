@@ -2,6 +2,7 @@
 This program creates a use GUI that graphs a RC circuit
 response when step_response is called when the user
 selects "Run" and communicates with Microcontroller.
+Runs on PC
 """
 import tkinter
 import math

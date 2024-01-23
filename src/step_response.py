@@ -1,7 +1,8 @@
-"""! @file main.py
+"""! @file step_response.py
 This program runs a 3.3V step on output pin A5, and then records
 the immediate response on pin PB0 for the following 2 seconds.
 Data points from the recorded response are printed over serial.
+Runs on STM32 Microcontroller
 """
 
 import cqueue
