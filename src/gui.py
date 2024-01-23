@@ -154,7 +154,7 @@ def plot_data(plot_axes, plot_canvas,xvals,yvals,labels):
 # %% 
 def quitprgm(tk_root):
     """!
-    Function clears adn closes Serial port and closes
+    Function clears and closes Serial port and closes
     GUI window.
     """
     
