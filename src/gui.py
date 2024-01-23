@@ -169,7 +169,7 @@ def quitprgm(tk_root):
     print("----Program Terminated----")
 
 # %%
-def test(title):
+def rc_response(title):
     """!
     Function creates GUI where the theoretical and experimental RC
     circuit curves are displayed. It also creates three buttons
@@ -214,4 +214,4 @@ def test(title):
 
 # %%
 if __name__ == "__main__":
-    test(title = "RC Response")
+    rc_response(title = "RC Response")
